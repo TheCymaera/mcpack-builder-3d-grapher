@@ -1,5 +1,5 @@
 import { writeFiles } from "./fileUtilities.ts";
-import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Tag, Duration, ScheduleMode } from "npm:mcpack-builder@1.0.2";
+import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Tag, Duration, ScheduleMode } from "npm:mcpack-builder";
 
 // output
 const outputPath = "pack";
@@ -7,7 +7,7 @@ const datapack = new Datapack();
 
 // config
 const namespace = new Namespace("3d-grapher");
-const internalId = namespace.getID("internal");
+const internalId = namespace.id("internal");
 const scoreboard = new Scoreboard({ objective: "3d_grapher" });
 const xSize = 10;
 const zSize = 10;
@@ -48,7 +48,7 @@ datapack.setPackMeta({
 	},
 });
 
-const init = datapack.setFunction(internalId.getID("init"), function*() {
+const init = datapack.setFunction(internalId.subID("init"), function*() {
 	yield scoreboard.remove();
 	yield scoreboard.create();
 	yield scoreAllocator.initConstants;
@@ -56,13 +56,13 @@ const init = datapack.setFunction(internalId.getID("init"), function*() {
 	yield panVelocityZ.assignConstant(panSpeedZ * resolution);
 });
 
-const removeGraph = datapack.setFunction(namespace.getID("remove_graph"), function*() {
+const removeGraph = datapack.setFunction(namespace.id("remove_graph"), function*() {
 	yield new Execute().as(allMarkers).run(
 		new CustomCommand("kill @s")
 	);
 });
 
-datapack.setFunction(namespace.getID("cleanup"), function*() {
+datapack.setFunction(namespace.id("cleanup"), function*() {
 	yield removeGraph.run();
 	yield scoreboard.remove();
 });
@@ -71,7 +71,7 @@ datapack.onLoadFunctions = new Tag([
 	init.namespacedId,
 ]);
 
-datapack.setFunction(namespace.getID("create_graph"), function*() {
+datapack.setFunction(namespace.id("create_graph"), function*() {
 	yield removeGraph.run();
 
 	const y = yOrigin;
@@ -88,13 +88,13 @@ datapack.setFunction(namespace.getID("create_graph"), function*() {
 		}
 	}
 
-	const flickerOn = datapack.setFunction(internalId.getID("flicker-on"), function*() {
+	const flickerOn = datapack.setFunction(internalId.subID("flicker-on"), function*() {
 		yield new Execute().as(allMarkers).run(
 			selfHeadSlot.setLiteralValue(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
 		);
 	});
 	
-	const flickerOff = datapack.setFunction(internalId.getID("flicker-off"), function*() {
+	const flickerOff = datapack.setFunction(internalId.subID("flicker-off"), function*() {
 		yield new Execute().as(allMarkers).run(
 			selfHeadSlot.setLiteralValue(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
 		);
@@ -120,12 +120,12 @@ datapack.setFunction(namespace.getID("create_graph"), function*() {
 
 
 // y = (x^2 + z^2) / 5
-datapack.setFunction(namespace.getID("paraboloid"), function*() {
+datapack.setFunction(namespace.id("paraboloid"), function*() {
 	const coefficient = 1/5;
 	const constant = yOrigin;
 
 	yield new Execute().as(allMarkers).run(
-		datapack.setFunction(internalId.getID("set_paraboloid"), function*() {
+		datapack.setFunction(internalId.subID("set_paraboloid"), function*() {
 			const xScore = scoreAllocator.score();
 			const zScore = scoreAllocator.score();
 
@@ -154,13 +154,13 @@ datapack.setFunction(namespace.getID("paraboloid"), function*() {
 
 
 // y = (x^2 - z^2) / 5
-datapack.setFunction(namespace.getID("saddle"), function*() {
+datapack.setFunction(namespace.id("saddle"), function*() {
 	// same as paraboloid, but subtract instead of add
 	const coefficient = 1/5;
 	const constant = yOrigin;
 
 	yield new Execute().as(allMarkers).run(
-		datapack.setFunction(internalId.getID("set_saddle"), function*() {
+		datapack.setFunction(internalId.subID("set_saddle"), function*() {
 			const xScore = scoreAllocator.score();
 			const zScore = scoreAllocator.score();
 
@@ -188,7 +188,7 @@ datapack.setFunction(namespace.getID("saddle"), function*() {
 // Some constants have been changed for reasons I don't remember.
 const sineInput = scoreAllocator.score();
 const sineOutput = scoreAllocator.score();
-const calcSine = datapack.setFunction(internalId.getID("calc_sine"), function*() {
+const calcSine = datapack.setFunction(internalId.subID("calc_sine"), function*() {
 	// double modX = x % 1;
 	// double result = (16 * modX * (1 - modX)) / (5 - modX * (1 - modX));
 	// if (x % 2 > 1) result *= -1;
@@ -221,9 +221,9 @@ const calcSine = datapack.setFunction(internalId.getID("calc_sine"), function*()
 });
 
 // y = sine(x / 3 + frame) + sine(z / 3 + frame) + altitude;
-datapack.setFunction(namespace.getID("sine"), function*() {
+datapack.setFunction(namespace.id("sine"), function*() {
 	yield new Execute().as(allMarkers).run(
-		datapack.setFunction(internalId.getID("set_sine"), function*() {
+		datapack.setFunction(internalId.subID("set_sine"), function*() {
 			// x
 			yield sineInput.assignCommand(selfX.getValue(resolution / 3));
 			yield sineInput.addScore(frame);
@@ -246,9 +246,9 @@ datapack.setFunction(namespace.getID("sine"), function*() {
 });
 
 // y = sine((x * x + z * z) / 8 + frame) + altitude;
-datapack.setFunction(namespace.getID("ripple"), function*() {
+datapack.setFunction(namespace.id("ripple"), function*() {
 	yield new Execute().as(allMarkers).run(
-		datapack.setFunction(internalId.getID("set_ripple"), function*() {
+		datapack.setFunction(internalId.subID("set_ripple"), function*() {
 			const xScore = sineInput;
 			const zScore = scoreAllocator.score();
 			yield xScore.assignCommand(selfX.getValue(resolution));
@@ -272,7 +272,7 @@ datapack.setFunction(namespace.getID("ripple"), function*() {
 });
 
 
-datapack.setFunction(namespace.getID("animate"), function*() {
+datapack.setFunction(namespace.id("animate"), function*() {
 	yield new Execute().if(panX.lessThan(-1 * resolution)).run(
 		panVelocityX.assignConstant(panSpeedX * resolution)
 	);
