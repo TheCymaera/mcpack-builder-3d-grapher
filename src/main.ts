@@ -9,6 +9,7 @@ const datapack = new Datapack();
 const namespace = new Namespace("3d-grapher");
 const internalId = namespace.id("internal");
 const scoreboard = new Scoreboard({ objective: "3d_grapher" });
+const entityScoreboardTag = "3dGrapher.marker";
 const xSize = 10;
 const zSize = 10;
 const xSpacing = 0.5;
@@ -28,7 +29,7 @@ const resolution = 100;
 const scoreAllocator = new ScoreAllocator({ scoreboard });
 
 // target selectors & references
-const allMarkers = EntitySelector.allEntities().hasScoreboardTag("3dGrapher.marker");
+const allMarkers = EntitySelector.allEntities().hasScoreboardTag(entityScoreboardTag);
 const selfX = new NBTReference({ target: EntitySelector.self(), path: "Pos[0]" });
 const selfY = new NBTReference({ target: EntitySelector.self(), path: "Pos[1]" });
 const selfZ = new NBTReference({ target: EntitySelector.self(), path: "Pos[2]" });
@@ -83,7 +84,7 @@ datapack.setFunction(namespace.id("create_graph"), function*() {
 			const finalZ = (zOrigin + z * zSpacing).toFixed(1);
 
 			yield new CustomCommand(
-				`summon minecraft:armor_stand ${finalX} ${finalY} ${finalZ} {Invisible:1b,Marker:1b,NoGravity:1b,Small:1b,Tags:["3dGrapher.marker"]}`
+				`summon minecraft:armor_stand ${finalX} ${finalY} ${finalZ} {Invisible:1b,Marker:1b,NoGravity:1b,Small:1b,Tags:["${entityScoreboardTag}"]}`
 			);
 		}
 	}
