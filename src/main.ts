@@ -183,6 +183,9 @@ datapack.setFunction(namespace.getID("saddle"), function*() {
 	);
 });
 
+// This function produces a sine-like curve, but is not actually sine.
+// It is based on Bhaskara I's sine approximation formula
+// Some constants have been changed for reasons I don't remember.
 const sineInput = scoreAllocator.score();
 const sineOutput = scoreAllocator.score();
 const calcSine = datapack.setFunction(internalId.getID("calc_sine"), function*() {
