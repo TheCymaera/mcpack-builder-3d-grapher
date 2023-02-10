@@ -1,5 +1,5 @@
 import { writeFiles } from "./fileUtilities.ts";
-import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Tag, Duration, ScheduleMode } from "npm:mcpack-builder@1.0.1";
+import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Tag, Duration, ScheduleMode } from "npm:mcpack-builder@1.0.2";
 
 // output
 const outputPath = "pack";
@@ -58,7 +58,7 @@ const init = datapack.setFunction(internalId.getID("init"), function*() {
 
 const removeGraph = datapack.setFunction(namespace.getID("remove_graph"), function*() {
 	yield new Execute().as(allMarkers).run(
-		CustomCommand.single("kill @s")
+		new CustomCommand("kill @s")
 	);
 });
 
@@ -82,7 +82,7 @@ datapack.setFunction(namespace.getID("create_graph"), function*() {
 			const finalY = y;
 			const finalZ = (zOrigin + z * zSpacing).toFixed(1);
 
-			yield CustomCommand.single(
+			yield new CustomCommand(
 				`summon minecraft:armor_stand ${finalX} ${finalY} ${finalZ} {Invisible:1b,Marker:1b,NoGravity:1b,Small:1b,Tags:["3dGrapher.marker"]}`
 			);
 		}
@@ -113,6 +113,8 @@ datapack.setFunction(namespace.getID("create_graph"), function*() {
 		yield flickerOff.schedule(Duration.ticks(time += flickerDuration), ScheduleMode.Append);
 		yield flickerOn.schedule(Duration.ticks(time += flickerInterval), ScheduleMode.Append);
 	}
+
+	yield new CustomCommand("execute as @p at @s run playsound minecraft:block.beacon.activate block @s ~ ~ ~ 1 0.7")
 });
 
 
