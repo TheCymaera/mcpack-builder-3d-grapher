@@ -1,5 +1,5 @@
 import { writeFiles } from "./fileUtilities.ts";
-import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Duration, ScheduleMode, FunctionAllocator } from "npm:mcpack-builder@1.0.4";
+import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Duration, ScheduleMode, FunctionAllocator } from "npm:mcpack-builder@1.0.6";
 
 // output
 const outputPath = "pack";
@@ -87,13 +87,13 @@ datapack.setFunction(namespace.id("create_graph"), function*() {
 
 	const flickerOn = funAllocator.function(function* flickerOn() {
 		yield new Execute().as(allMarkers).run(
-			selfHeadSlot.setLiteralValue(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
+			selfHeadSlot.setValueLiteral(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
 		);
 	});
 	
 	const flickerOff = funAllocator.function(function* flickerOff() {
 		yield new Execute().as(allMarkers).run(
-			selfHeadSlot.setLiteralValue(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
+			selfHeadSlot.setValueLiteral(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
 		);
 	});
 
