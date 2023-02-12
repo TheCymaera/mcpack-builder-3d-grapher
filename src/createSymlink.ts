@@ -6,5 +6,5 @@ const symlinkPath = "pack-symlink";
 console.log("Creating symlink at " + symlinkPath + "...");
 
 await createSymlink(await realPath(outputPath), symlinkPath);
-console.log(`Success!
-You can now move the symlink into your "world/datapacks" folder.`)
+
+console.log(`Success!\nYou can now move the symlink into your "world/datapacks" folder.`)
