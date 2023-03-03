@@ -108,8 +108,8 @@ datapack.setFunction(namespace.id("create_graph"), function*() {
 	yield flickerOn.run();
 	let time = 0;
 	for (const [flickerDuration, flickerInterval] of flickerDurations) {
-		yield flickerOff.scheduleAppendQueue(Duration.ticks(time += flickerDuration));
-		yield flickerOn.scheduleAppendQueue(Duration.ticks(time += flickerInterval));
+		yield flickerOff.scheduleAppend(Duration.ticks(time += flickerDuration));
+		yield flickerOn.scheduleAppend(Duration.ticks(time += flickerInterval));
 	}
 
 	yield command`execute as @p at @s run playsound minecraft:block.beacon.activate block @s ~ ~ ~ 1 0.7`;
