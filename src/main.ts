@@ -1,5 +1,5 @@
 import { writeFiles } from "./fileUtilities.ts";
-import { Datapack, EntitySelector, CustomCommand, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Duration, ScheduleMode, FunctionAllocator } from "npm:mcpack-builder@1";
+import { Datapack, EntitySelector, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Duration, FunctionAllocator, command } from "npm:mcpack-builder@1";
 
 // output
 const outputPath = "pack";
@@ -59,7 +59,7 @@ funAllocator.addOnLoadFunction(function *init() {
 
 const removeGraph = datapack.setFunction(namespace.id("remove_graph"), function*() {
 	yield new Execute().as(allMarkers).run(
-		new CustomCommand("kill @s")
+		command`kill @s`
 	);
 });
 
@@ -79,21 +79,22 @@ datapack.setFunction(namespace.id("create_graph"), function*() {
 			const finalY = y;
 			const finalZ = (zOrigin + z * zSpacing).toFixed(1);
 
-			yield new CustomCommand(
-				`summon minecraft:armor_stand ${finalX} ${finalY} ${finalZ} {Invisible:1b,Marker:1b,NoGravity:1b,Small:1b,Tags:["${entityScoreboardTag}"]}`
-			);
+			yield command`
+				summon minecraft:armor_stand ${finalX} ${finalY} ${finalZ} 
+				{Invisible:1b,Marker:1b,NoGravity:1b,Small:1b,Tags:["${entityScoreboardTag}"]}
+			`;
 		}
 	}
 
 	const flickerOn = funAllocator.function(function* flickerOn() {
 		yield new Execute().as(allMarkers).run(
-			selfHeadSlot.setValueLiteral(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
+			selfHeadSlot.assignSNBT(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
 		);
 	});
 	
 	const flickerOff = funAllocator.function(function* flickerOff() {
 		yield new Execute().as(allMarkers).run(
-			selfHeadSlot.setValueLiteral(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
+			selfHeadSlot.assignSNBT(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
 		);
 	});
 
@@ -107,11 +108,11 @@ datapack.setFunction(namespace.id("create_graph"), function*() {
 	yield flickerOn.run();
 	let time = 0;
 	for (const [flickerDuration, flickerInterval] of flickerDurations) {
-		yield flickerOff.schedule(Duration.ticks(time += flickerDuration), ScheduleMode.Append);
-		yield flickerOn.schedule(Duration.ticks(time += flickerInterval), ScheduleMode.Append);
+		yield flickerOff.scheduleAppendQueue(Duration.ticks(time += flickerDuration));
+		yield flickerOn.scheduleAppendQueue(Duration.ticks(time += flickerInterval));
 	}
 
-	yield new CustomCommand("execute as @p at @s run playsound minecraft:block.beacon.activate block @s ~ ~ ~ 1 0.7")
+	yield command`execute as @p at @s run playsound minecraft:block.beacon.activate block @s ~ ~ ~ 1 0.7`;
 });
 
 
