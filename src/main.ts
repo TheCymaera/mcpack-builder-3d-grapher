@@ -1,5 +1,5 @@
 import { emptyFolder, writeFiles } from "./fileUtilities.ts";
-import { Datapack, EntitySelector, Execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, Coordinate } from "npm:mcpack-builder@alpha";
+import { Datapack, Execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, Coordinate, entities } from "npm:mcpack-builder@alpha";
 
 // output
 const outputPath = "pack";
@@ -28,18 +28,18 @@ const resolution = 100;
 const scoreAllocator = new ScoreAllocator({ scoreboard });
 
 // target selectors & references
-const allMarkers = EntitySelector.allEntities().hasScoreboardTag(entityScoreboardTag);
-const selfX = new NBTSelector({ target: EntitySelector.self(), path: "Pos[0]" });
-const selfY = new NBTSelector({ target: EntitySelector.self(), path: "Pos[1]" });
-const selfZ = new NBTSelector({ target: EntitySelector.self(), path: "Pos[2]" });
-const selfHeadSlot = new NBTSelector({ target: EntitySelector.self(), path: "ArmorItems[3]" });
+const allMarkers = entities`@e`.hasScoreboardTag(entityScoreboardTag);
+const selfX = new NBTSelector({ target: entities`@s`, path: "Pos[0]" });
+const selfY = new NBTSelector({ target: entities`@s`, path: "Pos[1]" });
+const selfZ = new NBTSelector({ target: entities`@s`, path: "Pos[2]" });
+const selfHeadSlot = new NBTSelector({ target: entities`@s`, path: "ArmorItems[3]" });
 const panVelocityX = scoreAllocator.score();
 const panVelocityZ = scoreAllocator.score();
 
 // public variables
-const frame = scoreboard.custom("frame");
-const panX = scoreboard.custom("panX");
-const panZ = scoreboard.custom("panZ");
+const frame = scoreboard.id("frame");
+const panX = scoreboard.id("panX");
+const panZ = scoreboard.id("panZ");
 
 datapack.internalNamespace = namespace.id("internal");
 
@@ -77,7 +77,7 @@ datapack.mcfunction(namespace.id("create_graph")).set(function*() {
 	const y = yOrigin;
 	for (let x = 0; x < xSize; x++) {
 		for (let z = 0; z < zSize; z++) {
-			const coordinate = Coordinate.absolute(xOrigin + x * xSpacing, y, zOrigin + z * zSpacing, false);
+			const coordinate = Coordinate.absolute(xOrigin + x * xSpacing, y, zOrigin + z * zSpacing, true);
 
 			yield command`
 				summon minecraft:armor_stand ${coordinate} 
