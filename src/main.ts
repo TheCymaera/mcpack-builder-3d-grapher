@@ -1,5 +1,6 @@
-import { writeFiles } from "./fileUtilities.ts";
-import { Datapack, EntitySelector, Execute, NumericDataType, Scoreboard, NBTReference, ScoreAllocator, Namespace, Duration, FunctionAllocator, command } from "npm:mcpack-builder@1";
+import { Coordinate } from "../../../../code/web/misc/npm-packages/mcpack-builder/src/Coordinate.ts";
+import { emptyFolder, writeFiles } from "./fileUtilities.ts";
+import { Datapack, EntitySelector, Execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, NamespacedIDGenerator } from "npm:mcpack-builder@alpha";
 
 // output
 const outputPath = "pack";
@@ -26,14 +27,15 @@ const resolution = 100;
 
 // helper classes
 const scoreAllocator = new ScoreAllocator({ scoreboard });
-const funAllocator = new FunctionAllocator({ datapack, namespace: namespace.id("internal") });
+const uid = new NamespacedIDGenerator(namespace.id("internal"));
+//const funAllocator = new FunctionAllocator({ datapack, namespace: namespace.id("internal") });
 
 // target selectors & references
 const allMarkers = EntitySelector.allEntities().hasScoreboardTag(entityScoreboardTag);
-const selfX = new NBTReference({ target: EntitySelector.self(), path: "Pos[0]" });
-const selfY = new NBTReference({ target: EntitySelector.self(), path: "Pos[1]" });
-const selfZ = new NBTReference({ target: EntitySelector.self(), path: "Pos[2]" });
-const selfHeadSlot = new NBTReference({ target: EntitySelector.self(), path: "ArmorItems[3]" });
+const selfX = new NBTSelector({ target: EntitySelector.self(), path: "Pos[0]" });
+const selfY = new NBTSelector({ target: EntitySelector.self(), path: "Pos[1]" });
+const selfZ = new NBTSelector({ target: EntitySelector.self(), path: "Pos[2]" });
+const selfHeadSlot = new NBTSelector({ target: EntitySelector.self(), path: "ArmorItems[3]" });
 const panVelocityX = scoreAllocator.score();
 const panVelocityZ = scoreAllocator.score();
 
@@ -42,14 +44,16 @@ const frame = scoreboard.custom("frame");
 const panX = scoreboard.custom("panX");
 const panZ = scoreboard.custom("panZ");
 
-datapack.setPackMeta({
+datapack.packMeta = {
 	pack: {
 		pack_format: 7,
 		description: "Animated 3D Grapher for Minecraft"
 	},
-});
+};
 
-funAllocator.addOnLoadFunction(function *init() {
+datapack.mcfunction(uid.create("init"))
+.setOnLoad(true)
+.set(function *() {
 	yield scoreboard.remove();
 	yield scoreboard.create();
 	yield scoreAllocator.initConstants;
@@ -57,42 +61,39 @@ funAllocator.addOnLoadFunction(function *init() {
 	yield panVelocityZ.assignConstant(panSpeedZ * resolution);
 });
 
-const removeGraph = datapack.setFunction(namespace.id("remove_graph"), function*() {
+const removeGraph = datapack.mcfunction(namespace.id("remove_graph")).set(function*() {
 	yield new Execute().as(allMarkers).run(
 		command`kill @s`
 	);
 });
 
-datapack.setFunction(namespace.id("cleanup"), function*() {
+datapack.mcfunction(namespace.id("cleanup")).set(function*() {
 	yield removeGraph.run();
 	yield scoreboard.remove();
 });
 
-datapack.setFunction(namespace.id("create_graph"), function*() {
+datapack.mcfunction(namespace.id("create_graph")).set(function*() {
 	yield removeGraph.run();
 
 	const y = yOrigin;
 	for (let x = 0; x < xSize; x++) {
 		for (let z = 0; z < zSize; z++) {
-			// summon coordinates default to .5, so we have to explicitly specify .0.
-			const finalX = (xOrigin + x * xSpacing).toFixed(1);
-			const finalY = y;
-			const finalZ = (zOrigin + z * zSpacing).toFixed(1);
+			const coordinate = Coordinate.absolute(xOrigin + x * xSpacing, y, zOrigin + z * zSpacing, false);
 
 			yield command`
-				summon minecraft:armor_stand ${finalX} ${finalY} ${finalZ} 
+				summon minecraft:armor_stand ${coordinate} 
 				{Invisible:1b,Marker:1b,NoGravity:1b,Small:1b,Tags:["${entityScoreboardTag}"]}
 			`;
 		}
 	}
 
-	const flickerOn = funAllocator.function(function* flickerOn() {
+	const flickerOn = datapack.mcfunction(uid.create("flickerOn")).set(function*() {
 		yield new Execute().as(allMarkers).run(
 			selfHeadSlot.assignSNBT(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
 		);
 	});
 	
-	const flickerOff = funAllocator.function(function* flickerOff() {
+	const flickerOff = datapack.mcfunction(uid.create("flickerOff")).set(function*() {
 		yield new Execute().as(allMarkers).run(
 			selfHeadSlot.assignSNBT(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
 		);
@@ -118,12 +119,12 @@ datapack.setFunction(namespace.id("create_graph"), function*() {
 
 
 // y = (x^2 + z^2) / 5
-datapack.setFunction(namespace.id("paraboloid"), function*() {
+datapack.mcfunction(namespace.id("paraboloid")).set(function*() {
 	const coefficient = 1/5;
 	const constant = yOrigin;
 
 	yield new Execute().as(allMarkers).run(
-		funAllocator.function(function* setParaboloid() {
+		datapack.mcfunction(uid.create("set_paraboloid")).set(function*() {
 			const xScore = scoreAllocator.score();
 			const zScore = scoreAllocator.score();
 
@@ -152,13 +153,13 @@ datapack.setFunction(namespace.id("paraboloid"), function*() {
 
 
 // y = (x^2 - z^2) / 5
-datapack.setFunction(namespace.id("saddle"), function*() {
+datapack.mcfunction(namespace.id("saddle")).set(function*() {
 	// same as paraboloid, but subtract instead of add
 	const coefficient = 1/5;
 	const constant = yOrigin;
 
 	yield new Execute().as(allMarkers).run(
-		funAllocator.function(function* setSaddle() {
+		datapack.mcfunction(uid.create("set_saddle")).set(function*(){
 			const xScore = scoreAllocator.score();
 			const zScore = scoreAllocator.score();
 
@@ -186,7 +187,7 @@ datapack.setFunction(namespace.id("saddle"), function*() {
 // Some constants have been changed for reasons I don't remember.
 const sineInput = scoreAllocator.score();
 const sineOutput = scoreAllocator.score();
-const calcSine = funAllocator.function(function* calcSine() {
+const calcSine = datapack.mcfunction(uid.create()).set(function*() {
 	// double modX = x % 1;
 	// double result = (16 * modX * (1 - modX)) / (5 - modX * (1 - modX));
 	// if (x % 2 > 1) result *= -1;
@@ -219,9 +220,9 @@ const calcSine = funAllocator.function(function* calcSine() {
 });
 
 // y = sine(x / 3 + frame) + sine(z / 3 + frame) + altitude;
-datapack.setFunction(namespace.id("sine"), function*() {
+datapack.mcfunction(namespace.id("sine")).set(function*() {
 	yield new Execute().as(allMarkers).run(
-		funAllocator.function(function* setSine() {
+		datapack.mcfunction(uid.create("setSine")).set(function*() {
 			// x
 			yield sineInput.assignCommand(selfX.getValue(resolution / 3));
 			yield sineInput.addScore(frame);
@@ -244,9 +245,9 @@ datapack.setFunction(namespace.id("sine"), function*() {
 });
 
 // y = sine((x * x + z * z) / 8 + frame) + altitude;
-datapack.setFunction(namespace.id("ripple"), function*() {
+datapack.mcfunction(namespace.id("ripple")).set(function*() {
 	yield new Execute().as(allMarkers).run(
-		funAllocator.function(function* setRipple() {
+		datapack.mcfunction(uid.create("setRipple")).set(function* setRipple() {
 			const xScore = sineInput;
 			const zScore = scoreAllocator.score();
 			yield xScore.assignCommand(selfX.getValue(resolution));
@@ -270,7 +271,7 @@ datapack.setFunction(namespace.id("ripple"), function*() {
 });
 
 
-datapack.setFunction(namespace.id("animate"), function*() {
+datapack.mcfunction(namespace.id("animate")).set(function*() {
 	yield new Execute().if(panX.lessThan(-1 * resolution)).run(
 		panVelocityX.assignConstant(panSpeedX * resolution)
 	);
@@ -295,5 +296,6 @@ datapack.setFunction(namespace.id("animate"), function*() {
 
 
 console.log("Writing files...");
-await writeFiles(outputPath, datapack.build());
+await emptyFolder(outputPath);
+await writeFiles(outputPath, datapack.build().files);
 console.log("Complete!");
