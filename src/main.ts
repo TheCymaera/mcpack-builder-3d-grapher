@@ -1,5 +1,5 @@
 import { emptyFolder, writeFiles } from "./fileUtilities.ts";
-import { Datapack, Execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, Coordinate, entities } from "npm:mcpack-builder@alpha";
+import { Datapack, execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, Coordinate, entities } from "npm:mcpack-builder@alpha";
 
 // output
 const outputPath = "pack";
@@ -61,7 +61,7 @@ datapack.internalMcfunction("init")
 });
 
 const removeGraph = datapack.mcfunction(namespace.id("remove_graph")).set(function*() {
-	yield new Execute().as(allMarkers).run(
+	yield execute().as(allMarkers).run(
 		command`kill @s`
 	);
 });
@@ -87,13 +87,13 @@ datapack.mcfunction(namespace.id("create_graph")).set(function*() {
 	}
 
 	const flickerOn = datapack.internalMcfunction("flickerOn").set(function*() {
-		yield new Execute().as(allMarkers).run(
+		yield execute().as(allMarkers).run(
 			selfHeadSlot.assignSNBT(`{ id: "minecraft:cyan_concrete", Count: 1b }`)
 		);
 	});
 	
 	const flickerOff = datapack.internalMcfunction("flickerOff").set(function*() {
-		yield new Execute().as(allMarkers).run(
+		yield execute().as(allMarkers).run(
 			selfHeadSlot.assignSNBT(`{ id: "minecraft:cyan_stained_glass", Count: 1b }`)
 		);
 	});
@@ -122,7 +122,7 @@ datapack.mcfunction(namespace.id("paraboloid")).set(function*() {
 	const coefficient = 1/5;
 	const constant = yOrigin;
 
-	yield new Execute().as(allMarkers).run(
+	yield execute().as(allMarkers).run(
 		datapack.internalMcfunction("set_paraboloid").set(function*() {
 			const xScore = scoreAllocator.score();
 			const zScore = scoreAllocator.score();
@@ -157,7 +157,7 @@ datapack.mcfunction(namespace.id("saddle")).set(function*() {
 	const coefficient = 1/5;
 	const constant = yOrigin;
 
-	yield new Execute().as(allMarkers).run(
+	yield execute().as(allMarkers).run(
 		datapack.internalMcfunction("set_saddle").set(function*(){
 			const xScore = scoreAllocator.score();
 			const zScore = scoreAllocator.score();
@@ -213,14 +213,14 @@ const calcSine = datapack.internalMcfunction("calcSine").set(function*() {
 
 	// negate if x is even	
 	yield sineInput.moduloScore(scoreAllocator.constant(2 * resolution));
-	yield new Execute().if(sineInput.greaterThan(1 * resolution)).run(
+	yield execute().if(sineInput.greaterThan(1 * resolution)).run(
 		sineOutput.multiplyScore(scoreAllocator.constant(-1))
 	);
 });
 
 // y = sine(x / 3 + frame) + sine(z / 3 + frame) + altitude;
 datapack.mcfunction(namespace.id("sine")).set(function*() {
-	yield new Execute().as(allMarkers).run(
+	yield execute().as(allMarkers).run(
 		datapack.internalMcfunction("setSine").set(function*() {
 			// x
 			yield sineInput.assignCommand(selfX.getValue(resolution / 3));
@@ -245,7 +245,7 @@ datapack.mcfunction(namespace.id("sine")).set(function*() {
 
 // y = sine((x * x + z * z) / 8 + frame) + altitude;
 datapack.mcfunction(namespace.id("ripple")).set(function*() {
-	yield new Execute().as(allMarkers).run(
+	yield execute().as(allMarkers).run(
 		datapack.internalMcfunction("setRipple").set(function* setRipple() {
 			const xScore = sineInput;
 			const zScore = scoreAllocator.score();
@@ -271,19 +271,19 @@ datapack.mcfunction(namespace.id("ripple")).set(function*() {
 
 
 datapack.mcfunction(namespace.id("animate")).set(function*() {
-	yield new Execute().if(panX.lessThan(-1 * resolution)).run(
+	yield execute().if(panX.lessThan(-1 * resolution)).run(
 		panVelocityX.assignConstant(panSpeedX * resolution)
 	);
 
-	yield new Execute().if(panZ.lessThan(-1 * resolution)).run(
+	yield execute().if(panZ.lessThan(-1 * resolution)).run(
 		panVelocityZ.assignConstant(panSpeedZ * resolution)
 	);
 
-	yield new Execute().if(panX.greaterThan(1.5 * resolution)).run(
+	yield execute().if(panX.greaterThan(1.5 * resolution)).run(
 		panVelocityX.assignConstant(-panSpeedX * resolution)
 	);
 
-	yield new Execute().if(panZ.greaterThan(1.5 * resolution)).run(
+	yield execute().if(panZ.greaterThan(1.5 * resolution)).run(
 		panVelocityZ.assignConstant(-panSpeedZ * resolution)
 	);
 
