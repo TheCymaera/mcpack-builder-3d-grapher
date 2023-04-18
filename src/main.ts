@@ -1,5 +1,5 @@
 import { emptyFolder, writeFiles } from "./fileUtilities.ts";
-import { Datapack, execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, Coordinate, entities } from "npm:mcpack-builder@alpha";
+import { Datapack, execute, NumericDataType, Scoreboard, NBTSelector, ScoreAllocator, Namespace, Duration, command, Coordinate, entities } from "../../mcpack-builder/src/mod.ts";
 
 // output
 const outputPath = "pack";
